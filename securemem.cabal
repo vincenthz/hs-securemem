@@ -1,7 +1,7 @@
 Name:                securemem
 Version:             0.1.0
-Synopsis:            abstraction to a auto scrubbing and const time eq, memory chunk.
-Description:         abstraction to a auto scrubbing and const time eq, memory chunk.
+Synopsis:            abstraction to an auto scrubbing and const time eq, memory chunk.
+Description:         abstraction to an auto scrubbing and const time eq, memory chunk.
 License:             BSD3
 License-file:        LICENSE
 Copyright:           Vincent Hanquez <vincent@snarc.org>
