@@ -25,4 +25,4 @@ Library
 
 source-repository head
   type: git
-  location: git://github.com/vincenthz/securemem
+  location: git://github.com/vincenthz/hs-securemem
