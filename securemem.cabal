@@ -1,7 +1,9 @@
 Name:                securemem
 Version:             0.1.0
 Synopsis:            abstraction to an auto scrubbing and const time eq, memory chunk.
-Description:         abstraction to an auto scrubbing and const time eq, memory chunk.
+Description:
+    SecureMem is similar to ByteString, except that it provides a memory chunk that
+    will be auto-scrubbed after it run out of scope.
 License:             BSD3
 License-file:        LICENSE
 Copyright:           Vincent Hanquez <vincent@snarc.org>
