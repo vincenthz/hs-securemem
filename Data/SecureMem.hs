@@ -137,7 +137,7 @@ allocateScrubedForeignPtr sz = do
     fptr@(ForeignPtr addr _) <- mallocForeignPtrBytes sz
     addForeignPtrConcFinalizer fptr (scruber (Ptr addr))
     return fptr
-    where !scruber = szToScruber sz
+  where !scruber = szToScruber sz
 
 -- | Allocate a new SecureMem
 --
@@ -180,7 +180,7 @@ secureMemToByteString sm =
     B.unsafeCreate sz $ \dst ->
     withSecureMemPtr sm $ \src ->
     B.memcpy dst src (fromIntegral sz)
-    where !sz = secureMemGetSize sm
+  where !sz = secureMemGetSize sm
 
 -- | Create a SecureMem from a bytestring
 secureMemFromByteString :: ByteString -> SecureMem
@@ -188,5 +188,5 @@ secureMemFromByteString b = B.inlinePerformIO $ do
     sm <- allocateSecureMem len 
     withSecureMemPtr sm $ \dst -> withBytestringPtr $ \src -> B.memcpy dst src (fromIntegral len)
     return sm
-    where (fp, off, !len) = B.toForeignPtr b
-          withBytestringPtr f = withForeignPtr fp $ \p -> f (p `plusPtr` off)
+  where (fp, off, !len) = B.toForeignPtr b
+        withBytestringPtr f = withForeignPtr fp $ \p -> f (p `plusPtr` off)
