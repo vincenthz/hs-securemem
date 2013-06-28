@@ -52,6 +52,21 @@ secureMemGetSize (SecureMem (ForeignPtr _ fpc)) =
         MallocPtr mba _ -> I# (sizeofMutableByteArray# mba)
         _               -> error "cannot happen"
 
+secureMemEq :: SecureMem -> SecureMem -> Bool
+secureMemEq sm1 sm2 = sz1 == sz2 && B.inlinePerformIO meq
+  where meq = withSecureMemPtr sm1 $ \ptr1 ->
+              withSecureMemPtr sm2 $ \ptr2 ->
+              feq ptr1 ptr2
+        !sz1 = secureMemGetSize sm1
+        !sz2 = secureMemGetSize sm2
+        feq | sz1 == 8   = compareEq8
+            | sz1 == 16  = compareEq16
+            | sz1 == 24  = compareEq24
+            | sz1 == 32  = compareEq32
+            | sz1 == 64  = compareEq64
+            | sz1 == 128 = compareEq128
+            | sz1 == 256 = compareEq256
+            | otherwise  = compareEq (fromIntegral sz1)
 instance Show SecureMem where
     show _ = "<secure-mem>"
 
@@ -59,20 +74,7 @@ instance Byteable SecureMem where
     toBytes = secureMemToByteString
 
 instance Eq SecureMem where
-    sm1 == sm2 = sz1 == sz2 && B.inlinePerformIO meq
-        where meq = withSecureMemPtr sm1 $ \ptr1 ->
-                    withSecureMemPtr sm2 $ \ptr2 ->
-                    feq ptr1 ptr2
-              !sz1 = secureMemGetSize sm1
-              !sz2 = secureMemGetSize sm2
-              feq | sz1 == 8   = compareEq8
-                  | sz1 == 16  = compareEq16
-                  | sz1 == 24  = compareEq24
-                  | sz1 == 32  = compareEq32
-                  | sz1 == 64  = compareEq64
-                  | sz1 == 128 = compareEq128
-                  | sz1 == 256 = compareEq256
-                  | otherwise  = compareEq (fromIntegral sz1)
+    (==) = secureMemEq
 
 instance Monoid SecureMem where
     mempty        = unsafeCreateSecureMem 0 (\_ -> return ())
