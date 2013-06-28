@@ -67,6 +67,14 @@ secureMemEq sm1 sm2 = sz1 == sz2 && B.inlinePerformIO meq
             | sz1 == 128 = compareEq128
             | sz1 == 256 = compareEq256
             | otherwise  = compareEq (fromIntegral sz1)
+
+secureMemAppend :: SecureMem -> SecureMem -> SecureMem
+secureMemAppend s1 s2 =
+    unsafeCreateSecureMem (sz1+sz2) $ \dst -> do
+        withSecureMemPtr s1 $ \sp1 -> B.memcpy dst sp1 (fromIntegral sz1)
+        withSecureMemPtr s2 $ \sp2 -> B.memcpy (dst `plusPtr` sz1) sp2 (fromIntegral sz2)
+  where !sz1 = secureMemGetSize s1
+        !sz2 = secureMemGetSize s2
 instance Show SecureMem where
     show _ = "<secure-mem>"
 
@@ -77,13 +85,8 @@ instance Eq SecureMem where
     (==) = secureMemEq
 
 instance Monoid SecureMem where
-    mempty        = unsafeCreateSecureMem 0 (\_ -> return ())
-    mappend s1 s2 = unsafeCreateSecureMem (sz1+sz2) $ \dst -> do
-                        withSecureMemPtr s1 $ \sp1 -> B.memcpy dst sp1 (fromIntegral sz1)
-                        withSecureMemPtr s2 $ \sp2 -> B.memcpy (dst `plusPtr` sz1) sp2 (fromIntegral sz2)
-                    where 
-                          !sz1 = secureMemGetSize s1
-                          !sz2 = secureMemGetSize s2
+    mempty  = unsafeCreateSecureMem 0 (\_ -> return ())
+    mappend = secureMemAppend
 
 type Finalizer = Ptr Word8 -> IO ()
 type FinalizerWithSize = CInt -> Ptr Word8 -> IO ()
