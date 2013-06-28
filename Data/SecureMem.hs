@@ -89,7 +89,9 @@ instance Show SecureMem where
     show _ = "<secure-mem>"
 
 instance Byteable SecureMem where
-    toBytes = secureMemToByteString
+    toBytes        = secureMemToByteString
+    byteableLength = secureMemGetSize
+    withBytePtr    = withSecureMemPtr
 
 instance Eq SecureMem where
     (==) = secureMemEq
