@@ -75,6 +75,15 @@ secureMemAppend s1 s2 =
         withSecureMemPtr s2 $ \sp2 -> B.memcpy (dst `plusPtr` sz1) sp2 (fromIntegral sz2)
   where !sz1 = secureMemGetSize s1
         !sz2 = secureMemGetSize s2
+
+secureMemConcat :: [SecureMem] -> SecureMem
+secureMemConcat l = unsafeCreateSecureMem total $ \dst -> void $ foldM copy dst l
+  where total = sum $ map secureMemGetSize l
+        copy dst s = withSecureMemPtr s $ \sp -> do
+                    B.memcpy dst sp sz
+                    return (dst `plusPtr` sz)
+          where sz = secureMemGetSize s
+
 instance Show SecureMem where
     show _ = "<secure-mem>"
 
@@ -87,6 +96,7 @@ instance Eq SecureMem where
 instance Monoid SecureMem where
     mempty  = unsafeCreateSecureMem 0 (\_ -> return ())
     mappend = secureMemAppend
+    mconcat = secureMemConcat
 
 type Finalizer = Ptr Word8 -> IO ()
 type FinalizerWithSize = CInt -> Ptr Word8 -> IO ()
