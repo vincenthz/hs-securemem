@@ -34,6 +34,7 @@ import GHC.Ptr (Ptr(..))
 import Data.Word (Word8)
 import Data.Monoid
 import Control.Applicative ((<$>))
+import Control.Monad (foldM, void)
 import Data.ByteString (ByteString)
 import Data.Byteable
 import qualified Data.ByteString.Internal as B
