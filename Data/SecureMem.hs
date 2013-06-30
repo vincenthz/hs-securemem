@@ -11,6 +11,7 @@
 module Data.SecureMem
     ( SecureMem
     , secureMemGetSize
+    , secureMemCopy
     , ToSecureMem(..)
     -- * Allocation and early termination
     , allocateSecureMem
@@ -20,6 +21,7 @@ module Data.SecureMem
     -- * Pointers manipulation
     , withSecureMemPtr
     , withSecureMemPtrSz
+    , withSecureMemCopy
     -- * convertion
     , secureMemFromByteString
     ) where
@@ -84,6 +86,18 @@ secureMemConcat l = unsafeCreateSecureMem total $ \dst -> void $ foldM copy dst 
                     B.memcpy dst sp sz
                     return (dst `plusPtr` sz)
           where sz = secureMemGetSize s
+
+secureMemCopy :: SecureMem -> IO SecureMem
+secureMemCopy src =
+    createSecureMem sz $ \dst ->
+    withSecureMemPtr src $ \s -> B.memcpy dst s sz
+  where sz = secureMemGetSize src
+
+withSecureMemCopy :: SecureMem -> (Ptr Word8 -> IO ()) -> IO SecureMem
+withSecureMemCopy sm f = do
+    sm2 <- secureMemCopy sm
+    withSecureMemPtr sm2 f
+    return sm2
 
 instance Show SecureMem where
     show _ = "<secure-mem>"
