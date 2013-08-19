@@ -8,6 +8,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE CPP #-}
 module Data.SecureMem
     ( SecureMem
     , secureMemGetSize
@@ -29,13 +30,17 @@ module Data.SecureMem
 import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr, finalizeForeignPtr)
 import Foreign.Ptr
+#if MIN_VERSION_base(4,6,0)
 import GHC.Types (Int(..))
 import GHC.ForeignPtr (ForeignPtr(..), ForeignPtrContents(..), mallocForeignPtrBytes, addForeignPtrConcFinalizer)
 import GHC.Prim (sizeofMutableByteArray#)
 import GHC.Ptr (Ptr(..))
+#else
+import Foreign.ForeignPtr (ForeignPtr, mallocForeignPtrBytes)
+#endif
 import Data.Word (Word8)
 import Data.Monoid
-import Control.Applicative ((<$>))
+import Control.Applicative
 import Control.Monad (foldM, void)
 import Data.ByteString (ByteString)
 import Data.Byteable
@@ -46,14 +51,20 @@ import qualified Data.ByteString.Internal as B
 -- * Being scrubbed after its goes out of scope.
 -- * A Show instance that doesn't actually show any content
 -- * A Eq instance that is constant time
-newtype SecureMem = SecureMem (ForeignPtr Word8)
+#if MIN_VERSION_base(4,6,0)
+newtype SecureMem = SecureMem { getForeignPtr :: ForeignPtr Word8 }
+#else
+data SecureMem = SecureMem { getForeignPtr :: ForeignPtr Word8, secureMemGetSize :: Int }
+#endif
 
+#if MIN_VERSION_base(4,6,0)
 -- | Return the size of the memory allocated by this secure mem.
 secureMemGetSize :: SecureMem -> Int
 secureMemGetSize (SecureMem (ForeignPtr _ fpc)) =
     case fpc of
         MallocPtr mba _ -> I# (sizeofMutableByteArray# mba)
         _               -> error "cannot happen"
+#endif
 
 secureMemEq :: SecureMem -> SecureMem -> Bool
 secureMemEq sm1 sm2 = sz1 == sz2 && B.inlinePerformIO meq
@@ -83,14 +94,14 @@ secureMemConcat :: [SecureMem] -> SecureMem
 secureMemConcat l = unsafeCreateSecureMem total $ \dst -> void $ foldM copy dst l
   where total = sum $ map secureMemGetSize l
         copy dst s = withSecureMemPtr s $ \sp -> do
-                    B.memcpy dst sp sz
+                    B.memcpy dst sp (fromIntegral sz)
                     return (dst `plusPtr` sz)
           where sz = secureMemGetSize s
 
 secureMemCopy :: SecureMem -> IO SecureMem
 secureMemCopy src =
     createSecureMem sz $ \dst ->
-    withSecureMemPtr src $ \s -> B.memcpy dst s sz
+    withSecureMemPtr src $ \s -> B.memcpy dst s (fromIntegral sz)
   where sz = secureMemGetSize src
 
 withSecureMemCopy :: SecureMem -> (Ptr Word8 -> IO ()) -> IO SecureMem
@@ -139,6 +150,7 @@ foreign import ccall "compare_eq64"  compareEq64  :: Ptr Word8 -> Ptr Word8 -> I
 foreign import ccall "compare_eq128" compareEq128 :: Ptr Word8 -> Ptr Word8 -> IO Bool
 foreign import ccall "compare_eq256" compareEq256 :: Ptr Word8 -> Ptr Word8 -> IO Bool
 
+#if MIN_VERSION_base(4,6,0)
 -- | Scruber finalizers
 foreign import ccall "finalizer_scrub8" finalizerScrub8     :: Finalizer
 foreign import ccall "finalizer_scrub16" finalizerScrub16   :: Finalizer
@@ -159,22 +171,31 @@ szToScruber 64  = finalizerScrub64
 szToScruber 128 = finalizerScrub128
 szToScruber 256 = finalizerScrub256
 szToScruber n   = finalizerScrubVar (fromIntegral n)
+#endif
 
 -- | Allocate a foreign ptr which will be scrubed before memory free.
 -- the memory is allocated on the haskell heap
 allocateScrubedForeignPtr :: Int -> IO (ForeignPtr a)
 allocateScrubedForeignPtr sz = do
+#if MIN_VERSION_base(4,6,0)
     fptr@(ForeignPtr addr _) <- mallocForeignPtrBytes sz
     addForeignPtrConcFinalizer fptr (scruber (Ptr addr))
     return fptr
   where !scruber = szToScruber sz
+#else
+    mallocForeignPtrBytes sz
+#endif
 
 -- | Allocate a new SecureMem
 --
 -- The memory is allocated on the haskell heap, and will be scrubed
 -- before being released.
 allocateSecureMem :: Int -> IO SecureMem
+#if MIN_VERSION_base(4,6,0)
 allocateSecureMem sz = SecureMem <$> allocateScrubedForeignPtr sz
+#else
+allocateSecureMem sz = SecureMem <$> allocateScrubedForeignPtr sz <*> pure sz
+#endif
 
 -- | Create a new secure mem and running an initializer function
 createSecureMem :: Int -> (Ptr Word8 -> IO ()) -> IO SecureMem
@@ -194,15 +215,15 @@ unsafeCreateSecureMem sz f = B.inlinePerformIO (createSecureMem sz f)
 --
 -- this is similary to withForeignPtr for a ForeignPtr
 withSecureMemPtr :: SecureMem -> (Ptr Word8 -> IO b) -> IO b
-withSecureMemPtr (SecureMem fptr) f = withForeignPtr fptr f
+withSecureMemPtr sm f = withForeignPtr (getForeignPtr sm) f
 
 -- | similar to withSecureMem but also include the size of the pointed memory.
 withSecureMemPtrSz :: SecureMem -> (Int -> Ptr Word8 -> IO b) -> IO b
-withSecureMemPtrSz sm@(SecureMem fptr) f = withForeignPtr fptr (f (secureMemGetSize sm))
+withSecureMemPtrSz sm f = withForeignPtr (getForeignPtr sm) (f (secureMemGetSize sm))
 
 -- | Finalize a SecureMem early
 finalizeSecureMem :: SecureMem -> IO ()
-finalizeSecureMem (SecureMem fptr) = finalizeForeignPtr fptr
+finalizeSecureMem sm = finalizeForeignPtr $ getForeignPtr sm
 
 -- | Create a bytestring from a Secure Mem
 secureMemToByteString :: SecureMem -> ByteString
