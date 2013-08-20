@@ -49,8 +49,11 @@ import qualified Data.ByteString.Internal as B
 -- | SecureMem is a memory chunk which have the properties of:
 --
 -- * Being scrubbed after its goes out of scope.
+--
 -- * A Show instance that doesn't actually show any content
+--
 -- * A Eq instance that is constant time
+--
 #if MIN_VERSION_base(4,6,0)
 newtype SecureMem = SecureMem { getForeignPtr :: ForeignPtr Word8 }
 #else
