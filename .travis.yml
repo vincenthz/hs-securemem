@@ -28,7 +28,6 @@ install:
    fi
 
 script:
- - cd tests/ && runghc ./GenTests.hs && cd ..
  - cabal-1.18 configure --enable-tests -v2
  - cabal-1.18 build
  - cabal-1.18 test
