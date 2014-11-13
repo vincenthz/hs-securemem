@@ -70,10 +70,6 @@ void finalizer_scrubvar(uint32_t sz, void *ptr)
 	memset(ptr, 0xa5, sz);
 }
 
-int constant_memeq16(uint8_t *p1, uint8_t *p2)
-{
-}
-
 int compare_eq(uint32_t size, uint8_t *p1, uint8_t *p2)
 {
 	uint32_t i;
