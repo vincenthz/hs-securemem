@@ -41,7 +41,7 @@ import Foreign.ForeignPtr (ForeignPtr, mallocForeignPtrBytes)
 import Data.Word (Word8)
 import Data.Monoid
 import Control.Applicative
-import Control.Monad (foldM, void)
+import Control.Monad (foldM_)
 import Data.ByteString (ByteString)
 import Data.Byteable
 import qualified Data.ByteString.Internal as B
@@ -107,7 +107,7 @@ secureMemAppend s1 s2 =
         !sz2 = secureMemGetSize s2
 
 secureMemConcat :: [SecureMem] -> SecureMem
-secureMemConcat l = unsafeCreateSecureMem total $ \dst -> void $ foldM copy dst l
+secureMemConcat l = unsafeCreateSecureMem total $ \dst -> foldM_ copy dst l
   where total = sum $ map secureMemGetSize l
         copy dst s = withSecureMemPtr s $ \sp -> do
                     B.memcpy dst sp (fromIntegral sz)
