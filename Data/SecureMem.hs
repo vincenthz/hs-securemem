@@ -46,6 +46,19 @@ import Data.ByteString (ByteString)
 import Data.Byteable
 import qualified Data.ByteString.Internal as B
 
+#if MIN_VERSION_base(4,4,0)
+import System.IO.Unsafe (unsafeDupablePerformIO)
+#else
+import System.IO.Unsafe (unsafePerformIO)
+#endif
+
+pureIO :: IO a -> a
+#if MIN_VERSION_base(4,4,0)
+pureIO = unsafeDupablePerformIO
+#else
+pureIO = unsafePerformIO
+#endif
+
 -- | SecureMem is a memory chunk which have the properties of:
 --
 -- * Being scrubbed after its goes out of scope.
@@ -210,7 +223,8 @@ createSecureMem sz f = do
 -- | Create a new secure mem using inline perform IO to create a pure
 -- result.
 unsafeCreateSecureMem :: Int -> (Ptr Word8 -> IO ()) -> SecureMem
-unsafeCreateSecureMem sz f = B.inlinePerformIO (createSecureMem sz f)
+unsafeCreateSecureMem sz f = pureIO (createSecureMem sz f)
+{-# NOINLINE unsafeCreateSecureMem #-}
 
 -- | This is a way to look at the pointer living inside a foreign object. This
 -- function takes a function which is applied to that pointer. The resulting IO
