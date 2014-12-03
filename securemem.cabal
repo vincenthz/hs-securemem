@@ -14,7 +14,7 @@ Stability:           experimental
 Build-Type:          Simple
 Homepage:            http://github.com/vincenthz/hs-securemem
 Cabal-Version:       >=1.8
-data-files:          README.md
+extra-doc-files:     README.md
 
 Library
   Exposed-modules:   Data.SecureMem
