@@ -30,7 +30,7 @@ Test-suite testsuite
   type:                exitcode-stdio-1.0
   main-is:             TestRunner.hs
   hs-source-dirs:      tests/src
-  build-depends:       base < 5 && >= 4.4
+  build-depends:       base >= 4 && < 5
                      , securemem
                      , tasty                    >= 0.7
                      , tasty-th                 >= 0.1
