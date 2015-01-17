@@ -75,7 +75,7 @@ int compare_eq(uint32_t size, uint8_t *p1, uint8_t *p2)
 	uint32_t i;
 	int acc = 1;
 
-	for (i = 0; i < size / 8; i++)
+	for (i = 0; i < size; i++)
 		acc &= (p1[i] == p2[i]);
 	return acc;
 }
