@@ -258,3 +258,4 @@ secureMemFromByteString b = B.inlinePerformIO $ do
     return sm
   where (fp, off, !len) = B.toForeignPtr b
         withBytestringPtr f = withForeignPtr fp $ \p -> f (p `plusPtr` off)
+{-# NOINLINE secureMemFromByteString #-}
