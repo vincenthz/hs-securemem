@@ -259,3 +259,12 @@ secureMemFromByteString b = pureIO $ do
   where (fp, off, !len) = B.toForeignPtr b
         withBytestringPtr f = withForeignPtr fp $ \p -> f (p `plusPtr` off)
 {-# NOINLINE secureMemFromByteString #-}
+
+-- | Create a SecureMem from any byteable object
+secureMemFromByteable :: Byteable b => b -> SecureMem
+secureMemFromByteable bs = pureIO $ do
+    sm <- allocateSecureMem len
+    withSecureMemPtr sm $ \dst -> withBytePtr bs $ \src -> B.memcpy dst src (fromIntegral len)
+    return sm
+  where len = byteableLength bs
+{-# NOINLINE secureMemFromByteable #-}
