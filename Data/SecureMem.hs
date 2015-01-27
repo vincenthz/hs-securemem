@@ -252,8 +252,8 @@ secureMemToByteString sm =
 
 -- | Create a SecureMem from a bytestring
 secureMemFromByteString :: ByteString -> SecureMem
-secureMemFromByteString b = B.inlinePerformIO $ do
-    sm <- allocateSecureMem len 
+secureMemFromByteString b = pureIO $ do
+    sm <- allocateSecureMem len
     withSecureMemPtr sm $ \dst -> withBytestringPtr $ \src -> B.memcpy dst src (fromIntegral len)
     return sm
   where (fp, off, !len) = B.toForeignPtr b
