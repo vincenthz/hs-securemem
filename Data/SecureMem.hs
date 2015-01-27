@@ -25,6 +25,7 @@ module Data.SecureMem
     , withSecureMemCopy
     -- * convertion
     , secureMemFromByteString
+    , secureMemFromByteable
     ) where
 
 import Foreign.C.Types
