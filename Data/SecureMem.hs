@@ -23,7 +23,7 @@ module Data.SecureMem
     , withSecureMemPtr
     , withSecureMemPtrSz
     , withSecureMemCopy
-    -- * convertion
+    -- * conversion
     , secureMemFromByteString
     , secureMemFromByteable
     ) where
