@@ -31,7 +31,12 @@ module Data.SecureMem
 import           Foreign.ForeignPtr (withForeignPtr)
 import           Foreign.Ptr
 import           Data.Word (Word8)
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup
+import           Data.Foldable (toList)
+#else
 import           Data.Monoid
+#endif
 import           Control.Applicative
 import           Data.Byteable
 
@@ -96,10 +101,18 @@ instance Byteable SecureMem where
 instance Eq SecureMem where
     (==) = secureMemEq
 
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup SecureMem where
+    (<>)    = secureMemAppend
+    sconcat = secureMemConcat . toList
+#endif
+
 instance Monoid SecureMem where
     mempty  = unsafeCreateSecureMem 0 (\_ -> return ())
+#if !(MIN_VERSION_base(4,11,0))
     mappend = secureMemAppend
     mconcat = secureMemConcat
+#endif
 
 -- | Types that can be converted to a secure mem object.
 class ToSecureMem a where
