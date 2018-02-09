@@ -32,6 +32,7 @@ import           Foreign.ForeignPtr (withForeignPtr)
 import           Foreign.Ptr
 import           Data.Word (Word8)
 import           Data.Monoid
+import           Data.Semigroup
 import           Control.Applicative
 import           Data.Byteable
 
@@ -95,6 +96,8 @@ instance Byteable SecureMem where
 
 instance Eq SecureMem where
     (==) = secureMemEq
+
+instance Semigroup SecureMem where
 
 instance Monoid SecureMem where
     mempty  = unsafeCreateSecureMem 0 (\_ -> return ())
