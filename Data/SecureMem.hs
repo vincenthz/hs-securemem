@@ -31,6 +31,7 @@ module Data.SecureMem
 import           Foreign.ForeignPtr (withForeignPtr)
 import           Foreign.Ptr
 import           Data.Word (Word8)
+import           Data.Semigroup
 import           Data.Monoid
 import           Control.Applicative
 import           Data.Byteable
@@ -96,9 +97,12 @@ instance Byteable SecureMem where
 instance Eq SecureMem where
     (==) = secureMemEq
 
+instance Semigroup SecureMem where
+    (<>) = secureMemAppend
+
 instance Monoid SecureMem where
     mempty  = unsafeCreateSecureMem 0 (\_ -> return ())
-    mappend = secureMemAppend
+    mappend = (Data.Semigroup.<>)                           -- Prefixed to support multiple GHC versions
     mconcat = secureMemConcat
 
 -- | Types that can be converted to a secure mem object.
