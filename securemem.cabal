@@ -1,5 +1,5 @@
 Name:                securemem
-Version:             0.1.9
+Version:             0.1.10
 Synopsis:            abstraction to an auto scrubbing and const time eq, memory chunk.
 Description:
     SecureMem is similar to ByteString, except that it provides a memory chunk that
@@ -23,6 +23,7 @@ Library
                    , byteable >= 0.1.1
                    , memory >= 0.7
                    , ghc-prim
+  
   C-sources:         cbits/utils.c
   ghc-options:       -Wall -fwarn-tabs
 
