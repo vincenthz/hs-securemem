@@ -1,0 +1,25 @@
+# compiler supported and their equivalent LTS
+compiler: ghc-7.8 lts-2.22
+compiler: ghc-7.10 lts-6.35
+compiler: ghc-8.0 lts-9.21
+compiler: ghc-8.2 lts-10.4
+compiler: ghc-8.4 ghc-8.4-rc1
+
+# options
+# option: alias x=y z=v
+
+# builds 
+build: ghc-7.8 nohaddock
+build: ghc-8.2
+build: ghc-7.10
+build: ghc-8.0
+build: ghc-8.0 os=osx
+build: ghc-8.4 tests=no benchs=no extradep=memory-0.14.14 extradep=byteable-0.1.1 extradep=foundation-0.0.20 extradep=basement-0.0.7
+
+# packages
+package: '.'
+
+# extra builds
+hlint: allowed-failure
+weeder: allowed-failure
+coverall: false
