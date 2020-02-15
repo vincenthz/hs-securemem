@@ -60,13 +60,13 @@ pureIO = unsafeDupablePerformIO
 pureIO = unsafePerformIO
 #endif
 
--- | SecureMem is a memory chunk which have the properties of:
+-- | SecureMem is a memory chunk which has the properties of:
 --
--- * Being scrubbed after its goes out of scope.
+-- * Being scrubbed after it goes out of scope.
 --
 -- * A Show instance that doesn't actually show any content
 --
--- * A Eq instance that is constant time
+-- * An Eq instance that is constant time
 --
 newtype SecureMem = SecureMem ScrubbedBytes
 
@@ -125,7 +125,7 @@ instance ToSecureMem ByteString where
 
 -- | Allocate a new SecureMem
 --
--- The memory is allocated on the haskell heap, and will be scrubed
+-- The memory is allocated on the haskell heap, and will be scrubbed
 -- before being released.
 allocateSecureMem :: Int -> IO SecureMem
 allocateSecureMem sz = SecureMem <$> B.create sz (\_ -> return ())
@@ -144,11 +144,11 @@ unsafeCreateSecureMem sz f = pureIO (createSecureMem sz f)
 -- function takes a function which is applied to that pointer. The resulting IO
 -- action is then executed
 --
--- this is similary to withForeignPtr for a ForeignPtr
+-- This is similar to withForeignPtr for a ForeignPtr
 withSecureMemPtr :: SecureMem -> (Ptr Word8 -> IO b) -> IO b
 withSecureMemPtr (SecureMem sm) f = B.withByteArray sm f
 
--- | similar to withSecureMem but also include the size of the pointed memory.
+-- | Similar to withSecureMem but also include the size of the pointed memory.
 withSecureMemPtrSz :: SecureMem -> (Int -> Ptr Word8 -> IO b) -> IO b
 withSecureMemPtrSz (SecureMem sm) f = B.withByteArray sm (f (B.length sm))
 
